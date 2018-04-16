@@ -1,0 +1,7 @@
+[local]
+localhost
+
+[launched:vars]
+ansible_ssh_private_key_file= /Users/test/Downloads/ccinterviewee
+
+[launched]

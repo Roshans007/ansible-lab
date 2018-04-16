@@ -1,0 +1,21 @@
+---
+- hosts: local
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+      - name: Create a new EC2 key
+        ec2_key:
+            name: cc-interview-roshan
+            profile: default
+            key_material: "{{ lookup('file', '/Users/test/Downloads/ccinterviewee.pub') }}"
+            region: ap-southeast-1
+        register: ec2_key_result
+        ignore_errors: True
+       
+
+
+
+
+
