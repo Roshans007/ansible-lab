@@ -1,0 +1,389 @@
+openapi: 3.0.0
+info:
+  description: a service to provide a unified view of transactions data.
+  version: 0.1.0
+  title: ledger
+servers:
+  - url: http://api.example.com/v1
+externalDocs:
+  description: Confluence Wiki
+  url: https://reddotpayment.atlassian.net/wiki/spaces/PRD/pages/146047054/Service+-+Ledger
+tags:
+- name: ledger
+  description: listing of all possible API calls
+- name: history
+  description: this resource defines the history of a ledger, use this to retrieve details activity of a ledger record
+
+paths:
+  /ledger:
+    get:
+      tags:
+      - ledger
+      summary: retrieve the ledger entries
+      description: There are 3 groups of format for a query
+        * limit, and offset - are numeric string ^[0-9]*$
+        * sort - a comma separated list to sort the result. using + and - after urldecode to identify either ascending (+) or descending (-)
+        * [var] - selective filter based on the fields, only indexed fields are available to use. This has the format of [field]=[comparator],[value]. [comprator] can be = 
+          * gt - greater than 
+          * gte - greater than equal
+          * lt - less than 
+          * lte - less than equal 
+          * [empty] - equal
+        e.g. 
+          * refId=abcdefg
+          * date.created=gt,2018-06-05T00:00:00Z
+      parameters:
+        - in: query
+          name: offset 
+          schema:
+            type: integer
+          description: the number of items to skip
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: the number of items to return
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: sorting the list, its a comma separated values in the order of which is to be sorted. The first digit is either + (ascending) or - (descending), values is after url decode.
+        - in: query
+          name: refId
+          schema:
+            type: string
+          description: search by the refId being sent when creating the
+            data.
+        - in: query
+          name: account
+          schema:
+            type: string
+          description: search by the account
+        - in: query
+          name: date.created
+          schema:
+            type: string
+            format: date-time
+          description: the latest updated datetime in RFC3339 from when 
+            the group of data are qualified to be.
+        - in: query
+          name: date.updated
+          schema:
+            type: string
+            format: date-time
+          description: the latest updated datetime in RFC3339 from when
+            the group of data are qualified to be.
+      responses:
+        '200': 
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInternal'
+    post:
+      tags:
+      - ledger
+      summary: create a new ledger entry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LedgerRequest"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ledger'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInternal'
+  /ledger/{id}:
+    get:
+      tags:
+      - ledger
+      summary: retrieve the detail of a ledger entry
+      parameters:
+        - name: id
+          in: path
+          description: Record ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ledger'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInternal'
+    put:
+      tags:
+      - ledger
+      summary: update a ledger entry
+      parameters:
+        - name: id
+          in: path
+          description: Record ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LedgerRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ledger'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInternal'
+  /ledger/{id}/history:
+    get:
+      tags:
+      - history
+      summary: retrieve the historical entries of a specific record
+      parameters:
+        - name: id
+          in: path
+          description: Record ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfLedger'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInternal'
+components: 
+  schemas:
+    Ledger:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: the identifier of the ledger
+        - $ref: "#/components/schemas/LedgerRequest"
+        - type: object
+          properties:
+            versionId:
+              type: string
+              description: identifier to denote the version of this resource, correspondingly changing when a unique resource is being updated with PUT method.
+            links:
+              $ref: "#/components/schemas/ArrayOfLink"
+            date:
+              type: object
+              properties:
+                updated:
+                  type: string
+                  format: date-time
+                  description: When the ledger entry is last updated. RFC3339 section 5.6
+                  example: 2017-07-21T17:32:28Z
+                created:
+                  type: string
+                  format: date-time
+                  description: When the ledger entry is created. RFC3339 section 5.6
+                  example: 2017-07-21T17:32:28Z
+    LedgerRequest:
+      type: object
+      required:
+      - account
+      - refId
+      - status
+      - method
+      - entry
+      - amount
+      - currency
+      properties:
+        account:
+          type: string
+          description: the resource name of the requester of this api call.
+          example: rn:api:id:endpoint
+        refId:
+          type: string
+          description: the identifier for the transaction record related to signifies the uniqueness of this records, this id is a compounding data to signifies the transaction is a single transaction from the system.
+        status:
+          type: string
+          description: the status of the transaction, together with transactionID and mid, this signifies the uniqueness of the transaction data.
+          enum: ["create","pending","preauthorize","capture","settle",
+            "refund","void","reject","chargeback"]
+        method:
+          type: string
+          description: the type of payment that resulting in this values
+          enum: ["visa", "mastercard", "jcb", "amex", "unionpay", 
+          "dbspaylah", "alipay", "wechat", "n/a"]
+        entry:
+          type: string
+          enum: ["credit", "debit"]
+          description: the type of the transaction
+            * `credit` - if the transaction means funding are going into the gateway. e.g. sale
+            * `debit` - if the transaction means funding are out of the gateway. e.g. refund, void
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          description: alphabetical ISO-4217
+        description:
+          type: string
+          description: any reference information signifying this records, more for informational usage only
+        details:
+          type: object
+          description: this would be a free form json object, limited into 255 characters in total
+    LedgerListResponse:
+      type: object
+      properties:
+        count:
+          type: object
+          properties:
+            displayed:
+              type: integer
+              description: the number of items returned in this request
+            total:
+              type: integer
+              description: the total number of items exists that matched the criteria
+        ledgers:
+          $ref: "#/components/schemas/ArrayOfLedger"
+    ArrayOfLedger:
+        type: array
+        items: 
+          $ref: "#/components/schemas/Ledger"
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: the error code defining the details reference.
+            message:
+              type: string
+              description: the message describing the error.
+    ErrorBadRequest:
+      allOf:
+        - type: object
+          description: Bad Request
+        - $ref: '#/components/schemas/Error'
+    ErrorNotFound:
+      allOf:
+        - type: object
+          description: Not Found
+        - $ref: '#/components/schemas/Error'
+    ErrorInternal:
+      allOf:
+        - type: object
+          description: Internal Error
+        - $ref: '#/components/schemas/Error'
+    ArrayOfLink:
+        type: array
+        items: 
+          $ref: "#/components/schemas/Link"
+    Link:
+      description: HATEOAS link
+      type: object
+      properties:
+        rel:
+          type: string
+          description: the relationship descriptive words
+        href:
+          type: string
+          description: URL link to the resource with this relationship
